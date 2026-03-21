@@ -1,0 +1,17 @@
+data/
+*.tar.gz
+*.zip
+*.png
+*.pt
+*.pth
+models/
+outputs/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.ipynb_checkpoints/
+*.pem
+kaggle.json
+datastores/
+*_key.json
