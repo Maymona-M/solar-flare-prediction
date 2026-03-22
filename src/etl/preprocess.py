@@ -1,21 +1,23 @@
 """
 ETL pipeline: Validates, cleans and preprocesses solar flare magnetogram images.
 Reads from raw container, writes to processed container.
+Includes resume capability and corrupted image handling.
 """
 
 import os
 import pandas as pd
 from PIL import Image
 import numpy as np
+from io import BytesIO
 from azure.storage.blob import BlobServiceClient
 from tqdm import tqdm
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# Configuration
 STORAGE_ACCOUNT = "solarflarestorageproject"
 STORAGE_KEY     = os.environ.get("AZURE_STORAGE_KEY")
 RAW_CONTAINER   = "raw"
 PROC_CONTAINER  = "processed"
-IMAGE_SIZE      = (224, 224)  # dataset is already 224x224 but we verify
+IMAGE_SIZE      = (224, 224)
 
 
 def get_client(container: str):
@@ -44,32 +46,56 @@ def validate_image(img: Image.Image, filename: str) -> dict:
 
 
 def process_and_upload(raw_client, proc_client) -> pd.DataFrame:
-    """Download each image from raw, validate, and upload to processed."""
+    """Download each image from raw, validate, and upload to processed.
+    Skips corrupted images and resumes from where it left off.
+    """
     blobs = list(raw_client.list_blobs(name_starts_with="magnetograms/"))
     print(f"Found {len(blobs)} blobs in raw container.")
 
+    # Resume capability: skip already processed blobs
+    processed = set(
+        b.name.replace("clean/", "magnetograms/")
+        for b in proc_client.list_blobs(name_starts_with="clean/")
+    )
+    remaining = [b for b in blobs if b.name not in processed]
+    print(f"Already processed: {len(processed)}. Remaining: {len(remaining)}.")
+
     report = []
-    for blob in tqdm(blobs):
-        # Download
-        data = raw_client.download_blob(blob.name).readall()
+    for blob in tqdm(remaining):
+        try:
+            # Download
+            data = raw_client.download_blob(blob.name).readall()
 
-        # Open and validate
-        from io import BytesIO
-        img = Image.open(BytesIO(data)).convert("L")  # grayscale
-        stats = validate_image(img, blob.name)
-        report.append(stats)
+            # Skip suspiciously small files
+            if len(data) < 100:
+                print(f"Skipping too-small file: {blob.name}")
+                continue
 
-        # Skip invalid images
-        if not stats["valid"]:
-            print(f"Skipping invalid image: {blob.name}")
+            # Verify image integrity before processing
+            try:
+                img = Image.open(BytesIO(data))
+                img.verify()
+                img = Image.open(BytesIO(data)).convert("L")  # reopen after verify
+            except Exception:
+                print(f"Skipping corrupted image: {blob.name}")
+                continue
+
+            stats = validate_image(img, blob.name)
+            report.append(stats)
+
+            if not stats["valid"]:
+                continue
+
+            # Upload to processed container
+            proc_client.upload_blob(
+                name=blob.name.replace("magnetograms/", "clean/"),
+                data=data,
+                overwrite=True
+            )
+
+        except Exception as e:
+            print(f"Skipping {blob.name}: {e}")
             continue
-
-        # Upload to processed container
-        proc_client.upload_blob(
-            name=blob.name.replace("magnetograms/", "clean/"),
-            data=data,
-            overwrite=True
-        )
 
     return pd.DataFrame(report)
 
@@ -84,11 +110,11 @@ if __name__ == "__main__":
     print("Starting ETL pipeline...")
     report_df = process_and_upload(raw_client, proc_client)
 
-    # Save validation report
     os.makedirs("outputs", exist_ok=True)
     report_df.to_csv("outputs/validation_report.csv", index=False)
 
     print(f"\nETL complete.")
-    print(f"Valid images:   {report_df['valid'].sum()}")
-    print(f"Invalid images: {(~report_df['valid']).sum()}")
+    if len(report_df) > 0:
+        print(f"Valid images:   {report_df['valid'].sum()}")
+        print(f"Invalid images: {(~report_df['valid']).sum()}")
     print(f"Report saved to outputs/validation_report.csv")
