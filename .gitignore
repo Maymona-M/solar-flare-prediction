@@ -1,0 +1,64 @@
+# Azure ML temp files
+*.amltmp
+.amlignore
+
+# Notebooks checkpoints
+.ipynb_aml_checkpoints/
+
+# Credentials / secrets
+datastores/
+# ==========================
+# Azure ML temp files
+# ==========================
+*.amltmp
+.amlignore
+*.log
+
+# ==========================
+# Notebook checkpoints
+# ==========================
+.ipynb_checkpoints/
+.ipynb_aml_checkpoints/
+
+# ==========================
+# Azure ML outputs
+# ==========================
+outputs/
+mlruns/
+azureml-logs/
+
+# ==========================
+# Datastores / credentials
+# ==========================
+datastores/
+.env
+secrets.json
+*.pem
+*.key
+
+# ==========================
+# Python environment
+# ==========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+*.conda
+*.egg-info/
+dist/
+build/
+
+# ==========================
+# OS-specific files
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Misc
+# ==========================
+*.bak
+*.swp
+*.tmp.env
