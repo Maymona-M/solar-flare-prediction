@@ -1,18 +1,30 @@
+# Data files - never commit
 data/
 *.tar.gz
 *.zip
 *.png
 *.pt
 *.pth
+
+# Model outputs
 models/
 outputs/
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 .env
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Azure credentials - NEVER commit
 *.pem
 kaggle.json
 datastores/
-*_key.jsonnotebooks/.ipynb_aml_checkpoints/
+*_key.json
+
+# Azure ML temp files
+notebooks/.ipynb_aml_checkpoints/
 *.amltmp

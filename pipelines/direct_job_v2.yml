@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: solar-flare-training-v2
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: python src/train.py
+inputs:
+  training_data:
+    type: uri_file
+    path: azureml:solar-flare-features:2
+outputs:
+  model_output:
+    type: uri_folder
+    mode: upload

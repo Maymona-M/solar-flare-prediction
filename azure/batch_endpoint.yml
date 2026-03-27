@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/batchEndpoint.schema.json
+name: solar-flare-batch-endpoint
+description: Batch endpoint for solar flare prediction
+auth_mode: aad_token
+defaults:
+  deployment_name: solar-flare-model-deployment

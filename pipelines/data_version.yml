@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: solar-flare-features
+version: 1
+description: Feature dataset extracted from magnetogram images in Phase 1
+type: uri_file
+path: azureml://datastores/workspaceblobstore/paths/outputs/features_with_target.csv
