@@ -52,3 +52,4 @@ secrets.json
 *.swp
 .DS_Store
 Thumbs.db
+outputs/features_labeled.csv
