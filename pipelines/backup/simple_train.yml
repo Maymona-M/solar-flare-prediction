@@ -1,0 +1,29 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: simple-train
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: |
+  echo "Checking for CSV files..."
+  ls -la outputs/ 2>/dev/null || echo "No outputs folder"
+  echo ""
+  echo "Trying to load CSV from Azure dataset..."
+  python -c "
+import pandas as pd
+import os
+# Try to find the CSV
+paths_to_try = ['outputs/features_with_target.csv', 'features_with_target.csv', '/tmp/features_with_target.csv']
+for path in paths_to_try:
+    if os.path.exists(path):
+        print(f'Found CSV at: {path}')
+        df = pd.read_csv(path)
+        print(f'Shape: {df.shape}')
+        break
+else:
+    print('CSV file not found in any location')
+    print('Current directory contents:')
+    os.system('ls -la')
+    print('Searching for CSV files:')
+    os.system('find . -name *.csv 2>/dev/null')
+"

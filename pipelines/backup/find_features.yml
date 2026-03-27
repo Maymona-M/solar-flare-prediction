@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: find-features-file
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: |
+  echo "=== Searching for features_with_target.csv ==="
+  find / -name "features_with_target.csv" 2>/dev/null
+  echo ""
+  echo "=== Listing /tmp directory ==="
+  ls -la /tmp

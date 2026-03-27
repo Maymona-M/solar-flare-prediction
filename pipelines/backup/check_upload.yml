@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: check-uploaded-files
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: |
+  echo "=== Current directory contents ==="
+  ls -la
+  echo ""
+  echo "=== Outputs directory contents ==="
+  ls -la outputs/ 2>/dev/null || echo "outputs directory not found"
+  echo ""
+  echo "=== Searching for CSV files in code directory ==="
+  find . -name "*.csv" -type f 2>/dev/null

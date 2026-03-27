@@ -1,6 +1,4 @@
-# ==========================
-# Data files - never commit
-# ==========================
+# Data files - never commit large binary files
 data/
 *.tar.gz
 *.zip
@@ -11,68 +9,46 @@ data/
 *.pth
 *.h5
 *.pkl
-*.csv
-*.joblib
 
-# ==========================
-# Model outputs and logs
-# ==========================
+# Model outputs (but allow CSV files)
 models/
-outputs/
 mlruns/
 azureml-logs/
 *.log
 
-# ==========================
-# Python environment
-# ==========================
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 .env
-env/
 venv/
 ENV/
-env.bak/
-venv.bak/
-.pytest_cache/
 
-# ==========================
-# Jupyter notebooks
-# ==========================
+# Jupyter
 .ipynb_checkpoints/
 .ipynb_aml_checkpoints/
 notebooks/.ipynb_aml_checkpoints/
 
-# ==========================
 # Azure ML temp files
-# ==========================
 .amlignore
 .amlignore.amltmp
 **/.amlignore
 **/.amlignore.amltmp
 *.amltmp
 
-# ==========================
-# Azure credentials - NEVER commit
-# ==========================
+# Azure credentials
 *.pem
 *.key
 *_key.json
 kaggle.json
 datastores/
 secrets.json
-*.publishsettings
 
-# ==========================
-# IDE and OS files
-# ==========================
+# IDE
 .vscode/
 .idea/
 *.swp
-*.swo
-*~
 .DS_Store
 Thumbs.db

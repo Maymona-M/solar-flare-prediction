@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: train-with-features-folder
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: |
+  python -c "
+import pandas as pd
+import os
+data_path = os.environ.get('AZUREML_DATASET_INPUT_features_data', '.')
+print(f'Data path: {data_path}')
+print(f'Files in data path: {os.listdir(data_path)}')
+df = pd.read_csv(os.path.join(data_path, 'features_with_target.csv'))
+print(f'✓ CSV loaded successfully!')
+print(f'Data shape: {df.shape}')
+print(f'Columns: {list(df.columns)[:5]}...')
+print(f'Target column: flare_occurred')
+"
+inputs:
+  features_data:
+    type: uri_folder
+    path: azureml:solar-flare-features-folder:1

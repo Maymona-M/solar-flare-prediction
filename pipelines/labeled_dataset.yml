@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: solar-flare-labeled
+version: 1
+description: Labeled features for solar flare prediction with binary targets
+type: uri_file
+path: azureml://datastores/workspaceblobstore/paths/features/features_labeled.csv
