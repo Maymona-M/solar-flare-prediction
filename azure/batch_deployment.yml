@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/batchDeployment.schema.json
+name: solar-flare-model-deployment
+description: Deployment of solar flare prediction model
+endpoint_name: solar-flare-batch-endpoint
+model: azureml:solar-flare-model:1
+code_configuration:
+  code: ../src
+  scoring_script: score.py
+environment: azureml:solar-flare-env:1
+compute: azureml:solar-flare-cluster
+resources:
+  instance_count: 1
+settings:
+  mini_batch_size: 100
+  output_action: append_row
+  error_threshold: -1
+  logging_level: INFO

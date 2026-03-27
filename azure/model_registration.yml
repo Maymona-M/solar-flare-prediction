@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: solar-flare-model
+version: 1
+description: Solar flare prediction model trained on magnetogram data
+path: azureml:model_output:1
+type: mlflow_model
+properties:
+  model_type: "CNN_baseline"
+  training_data_version: "1"
+  validation_accuracy: "0.85"
+  framework: "PyTorch"
+tags:
+  project: "solar-flare-prediction"
+  phase: "2"
+  data_version: "features_v1"
