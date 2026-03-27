@@ -9,8 +9,8 @@
 
 | Name | Student ID | Role |
 |---|---|---|
-| Maymona Mustafa | 60306027 | Data Ingestion, Data Cataloging |
-| Asma Riyaz | 60305750 | ETL Pipeline, Exploratory Analysis, Feature Extraction |
+| Maymona Mustafa | 60306027 | Model Development, Versioning and Deployment  |
+| Asma Riyaz | 60305750 | Model Development & Validation |
 
 ---
 
@@ -26,15 +26,15 @@ This project develops a supervised machine learning system to predict solar flar
 
 ---
 
-## Phase 1 Objectives
+## Phase 2 Objectives
 
-Phase 1 focuses on building the data foundation of the AI system. The objectives are:
+Phase 2 focuses on model development, validation, and deployment within an AI system.
 
-1. **Data Ingestion** — Identify data sources and implement a reliable batch ingestion process. Raw data is preserved and versioned in Azure Blob Storage.
-2. **ETL Process** — Design and implement an automated ETL pipeline that cleans, validates, and normalizes the raw magnetogram images. All transformations are reproducible.
-3. **Cataloging and Governance** — Register the dataset and its schema in a data catalog. Document schema definitions, data types, lineage, and storage zones.
-4. **Exploratory Analysis** — Conduct exploratory data analysis to assess class distributions, pixel intensity patterns, outliers, and data readiness.
-5. **Feature Extraction** — Define and implement an initial set of features aligned with the project hypothesis, including statistical, gradient, and spatial features.
+1. **Model Development** — Select appropriate model(s) aligned with the project hypothesis and data characteristics. Establish at least one baseline model. Training must be reproducible with explicit handling of data splits, parameters, and random seeds.
+2. **Model Validation** — Define and apply a validation strategy appropriate to the problem context, including selection of evaluation metrics, error analysis, and comparison against baselines. Validation must reflect realistic usage conditions and avoid data leakage.
+3. **Model Versioning and Registration** — Version trained models and associated artifacts. Register models with clear metadata including training data version, feature set, metrics, and limitations. Ensure traceability between data, code, and deployed models.
+4. **Deployment** — Deploy the selected model using an appropriate serving mode (batch or real-time). Define clear input and output interfaces, ensure feature parity between training and serving, and document deployment configuration.
+5. **Deployment Validation** — Verify deployed model behavior through functional tests and sanity checks. Confirm correctness, latency expectations, and consistency between offline and deployed predictions.
 
 ---
 
@@ -59,72 +59,120 @@ solar-flare-prediction/
 
 ---
 
-## Phase 1 Implementation
+## Phase 2 Implementation
 
-### Data Ingestion
+### Labeled Dataset Preparation
 
-- **Source:** Zenodo record 7775776 (NASA Solar Dynamics Observatory)
-- **Mode:** Batch ingestion
-- **Format:** PNG images (224×224 grayscale magnetograms)
-- **Script:** `src/ingestion/download_dataset.py`
-- **Storage:** Azure Blob Storage — `solarflarestorageproject` — `raw` container
-- **Layout:** `raw/magnetograms/<label>_<timestamp>.png`
+The Phase 1 features were merged with Dryad labels to create a properly labeled dataset for training:
 
-The ingestion script downloads the dataset using `zenodo_get`, extracts the archive, and uploads all PNG files to the raw container using the Azure Blob Storage SDK.
+| Source | Description |
+|--------|-------------|
+| Features | `Lat60_Lon60_Nans0_C1.0_24hr_png_224_features.csv` (950,047 rows) |
+| Labels | `C1.0_24hr_224_png_Labels.txt` from Dryad (filename, flare_class) |
+| Merge Strategy | Filename-based join using base filename (e.g., `1064_hmi.M_720s.20100501_000000_TAI.1.magnetogram_224.png`) |
+| Output | `features_labeled.csv` (950,047 rows, 18 features + flare_class + binary target) |
 
-### ETL Process
+**Class Distribution:**
+- Flare positive (≥C1.0): 878,485 images (92.5%)
+- Flare negative: 71,562 images (7.5%)
 
-- **Script:** `src/etl/preprocess.py`
-- **Notebook:** `notebooks/ETL.ipynb`
-- **Steps:**
-  1. Read images from raw container
-  2. Validate each image (size check, blank detection, NaN check)
-  3. Normalize pixel values to 0–1 range
-  4. Upload cleaned images to processed container (`clean/` prefix)
-  5. Generate validation report CSV
+#### Compute Configuration
 
-Invalid images are logged and skipped. All transformations are reproducible and parameterized.
+```bash
+# Compute cluster created with:
+az ml compute create --name solar-flare-cluster \
+  --type AmlCompute \
+  --size Standard_DS3_v2 \
+  --min-instances 0 \
+  --max-instances 2
+```
+#### Environment Configuration
 
-### Cataloging and Governance
+```bash
+# azure/aml_environment.yml
+name: solar-flare-env
+version: 1
+dependencies:
+  - python=3.9
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - Pillow
+  - pip
+  - pip:
+    - torch==2.0.1
+    - torchvision==0.15.2
+    - tensorflow
+    - azureml-mlflow
+```
 
-- **Catalog:** `azure/catalog.json`
-- **Schema:** Grayscale PNG, 224×224, uint8 pixel values
-- **Zones:** `raw/` (original), `processed/clean/` (validated and normalized)
-- **Labels:** X (strongest), M (moderate), C (weak), B (very weak), N (no flare)
-- **Lineage:** Zenodo → raw container → ETL → processed container → feature store
+#### Dataset Registration
 
-### Exploratory Analysis
+The labeled dataset is registered in Azure ML for versioned access:
 
-- **Notebook:** `notebooks/EDA.ipynb`
-- **Covers:**
-  - Class distribution (multi-class and binary)
-  - Pixel intensity distributions by flare class
-  - Mean and standard deviation analysis per class
-  - Sample image visualization grid
-  - Outlier detection via blank image flagging
+```bash
+# Dataset registration YAML
+# pipelines/labeled_dataset.yml
+az ml data create -f pipelines/labeled_dataset.yml
+```
 
-### Feature Extraction
+#### Model Training Pipeline
 
-- **Script:** `src/features/feature_extraction.py`
-- **Features extracted per image:**
-  - **Statistical:** mean, std, min, max, skewness, kurtosis, IQR, percentiles
-  - **Gradient:** mean/std/max of pixel gradient magnitude (edge strength)
-  - **Spatial:** center of mass (x, y), active region pixel ratio
-- **Output:** `outputs/features.csv`
-- **Justification:** Magnetic field intensity statistics capture flare-relevant patterns; gradient features detect sharp magnetic polarity boundaries associated with flare activity; spatial features capture active region geometry.
+The training pipeline is defined in pipelines/training_pipeline.yml and accepts the labeled dataset as input.
+
+```bash
+# Submit training job
+az ml job create -f pipelines/training_pipeline.yml \
+  --resource-group rg-60306027 \
+  --workspace-name solar-flare-aml-60306027
+```
+
+#### Batch Deployment Configuration
+
+The batch endpoint is configured for model serving:
+
+```bash
+# azure/batch_endpoint.yml
+name: solar-flare-batch-endpoint
+description: Batch endpoint for solar flare prediction
+auth_mode: aad_token
+
+# azure/batch_deployment.yml
+name: solar-flare-model-deployment
+endpoint_name: solar-flare-batch-endpoint
+model: azureml:solar-flare-model:1
+code_configuration:
+  code: ../src
+  scoring_script: score.py
+environment: azureml:solar-flare-env:1
+compute: azureml:solar-flare-cluster
+```
+
+#### Scoring Script
+
+The scoring script src/score.py implements:
+
+```bash init():``` Loads the trained model from Azure ML
+
+```bash run(mini_batch):``` Processes batches of images and returns predictions
+
+Input: List of PNG image file paths
+Output: DataFrame with columns: ```bash filename ```, ```bash prediction ```, ```bash confidence ```
 
 ---
 
 ## Azure Infrastructure
 
-| Resource | Name |
-|---|---|
-| Resource Group | rg-60306027 |
-| Storage Account | solarflarestorageproject |
-| Raw Container | raw |
-| Processed Container | processed |
-| Curated Container | curated |
-| AML Workspace | solar-flare-aml-60306027 |
+| Resource | Name | Description |
+|----------|------|-------------|
+| Resource Group | `rg-60306027` | Container for all Azure resources |
+| Storage Account | `solarflarestorageproject` | Raw, processed, and curated image storage |
+| AML Workspace | `solar-flare-aml-60306027` | Central ML resource management |
+| Compute Cluster | `solar-flare-cluster` | Standard_DS3_v2, 0-2 nodes, auto-scale |
+| Environment | `solar-flare-env:1` | PyTorch 2.0.1, scikit-learn, pandas, tensorflow |
+| Labeled Dataset | `solar-flare-labeled:1` | Versioned dataset with 950,047 labeled samples |
 
 ---
 
@@ -167,7 +215,8 @@ python src/features/feature_extraction.py
 | Branch | Purpose |
 |---|---|
 | `main` | Stable, submitted snapshots |
-| `phase1` | Phase 1 development (current) |
+| `phase1` | Phase 1 development (data foundation) |
+| `phase2` | Phase 2 development (modeling & deployment) - current |
 
 ---
 
