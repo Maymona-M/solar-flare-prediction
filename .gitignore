@@ -1,12 +1,3 @@
-# Azure ML temp files
-*.amltmp
-.amlignore
-
-# Notebooks checkpoints
-.ipynb_aml_checkpoints/
-
-# Credentials / secrets
-datastores/
 # ==========================
 # Azure ML temp files
 # ==========================
@@ -43,22 +34,28 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.Python
 env/
 venv/
-*.conda
-*.egg-info/
-dist/
-build/
+ENV/
+env.bak/
+venv.bak/
 
 # ==========================
-# OS-specific files
+# IDE and OS files
 # ==========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 
 # ==========================
-# Misc
+# Data files (optional - uncomment if needed)
 # ==========================
-*.bak
-*.swp
-*.tmp.env
+# *.csv
+# *.h5
+# *.pkl
+# *.joblib
