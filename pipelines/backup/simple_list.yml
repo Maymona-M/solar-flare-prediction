@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: list-root-files
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: ls -la /tmp && echo "=== Looking for CSV files ===" && find / -name "*.csv" 2>/dev/null | head -20

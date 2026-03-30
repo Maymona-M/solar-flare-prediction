@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: solar-flare-features-folder
+version: 1
+description: Features dataset for solar flare prediction (folder)
+type: uri_folder
+path: azureml://datastores/workspaceblobstore/paths/features/

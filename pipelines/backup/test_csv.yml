@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: test-csv-access
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: |
+  echo "=== Current directory ==="
+  pwd
+  echo ""
+  echo "=== Files in current directory ==="
+  ls -la
+  echo ""
+  echo "=== Outputs directory ==="
+  ls -la outputs/ 2>/dev/null || echo "outputs directory not found"
+  echo ""
+  echo "=== Trying to load CSV ==="
+  python -c "import pandas as pd; import os; csv_path='outputs/features_with_target.csv'; df = pd.read_csv(csv_path) if os.path.exists(csv_path) else print(f'File not found: {csv_path}'); print(f'Shape: {df.shape}')" 2>/dev/null || python -c "import os; print('CSV file not found'); os.system('find . -name *.csv -type f 2>/dev/null')"

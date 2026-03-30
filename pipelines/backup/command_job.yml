@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: test-training-job
+description: Test training job to verify infrastructure
+compute: azureml:solar-flare-cluster
+environment: azureml:solar-flare-env:1
+code: ./
+command: >-
+  echo "Testing infrastructure setup" && 
+  python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
