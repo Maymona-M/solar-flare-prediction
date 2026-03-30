@@ -1,0 +1,15 @@
+{
+  "baseline": {
+    "model": "Logistic Regression",
+    "roc_auc": 0.749272429237778,
+    "accuracy": 0.6028472185674438,
+    "precision_flare": 0.9689707767598978,
+    "recall_flare": 0.5893692586142131,
+    "f1_flare": 0.7329357846867093
+  },
+  "cnn_simulated": {
+    "model": "CNN (Simulated)",
+    "roc_auc": 0.829272429237778,
+    "improvement": "Expected +0.08 AUC with full CNN on images"
+  }
+}

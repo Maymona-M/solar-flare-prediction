@@ -10,15 +10,15 @@ data/
 *.pt
 *.pth
 *.h5
-*.pkl
-*.csv
-*.joblib
+# *.pkl
+# *.csv
+# *.joblib
 
 # ==========================
 # Model outputs and logs
 # ==========================
 models/
-outputs/
+# outputs/
 mlruns/
 azureml-logs/
 *.log
