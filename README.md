@@ -26,95 +26,6 @@ This project develops a supervised machine learning system to predict solar flar
 
 ---
 
-## Phase 1 Objectives
-
-Phase 1 focuses on building the data foundation of the AI system. The objectives are:
-
-1. **Data Ingestion** — Identify data sources and implement a reliable batch ingestion process. Raw data is preserved and versioned in Azure Blob Storage.
-2. **ETL Process** — Design and implement an automated ETL pipeline that cleans, validates, and normalizes the raw magnetogram images. All transformations are reproducible.
-3. **Cataloging and Governance** — Register the dataset and its schema in a data catalog. Document schema definitions, data types, lineage, and storage zones.
-4. **Exploratory Analysis** — Conduct exploratory data analysis to assess class distributions, pixel intensity patterns, outliers, and data readiness.
-5. **Feature Extraction** — Define and implement an initial set of features aligned with the project hypothesis, including statistical, gradient, and spatial features.
-
----
-
-## Repository Structure
-```
-solar-flare-prediction/
-├── src/
-│   ├── ingestion/         # Data ingestion scripts
-│   ├── etl/               # ETL pipeline scripts
-│   ├── features/          # Feature extraction scripts
-│   └── catalog/           # Data catalog and schema
-├── notebooks/
-│   ├── EDA.ipynb          # Exploratory data analysis
-│   └── ETL.ipynb          # ETL pipeline notebook
-├── azure/
-│   └── catalog.json       # Azure data catalog metadata
-├── datastores/            # Azure datastore config (not committed)
-├── environment.yml        # Conda environment
-├── requirements.txt       # Python dependencies
-└── README.md
-```
-
----
-
-## Phase 1 Implementation
-
-### Data Ingestion
-
-- **Source:** Zenodo record 7775776 (NASA Solar Dynamics Observatory)
-- **Mode:** Batch ingestion
-- **Format:** PNG images (224×224 grayscale magnetograms)
-- **Script:** `src/ingestion/download_dataset.py`
-- **Storage:** Azure Blob Storage — `solarflarestorageproject` — `raw` container
-- **Layout:** `raw/magnetograms/<label>_<timestamp>.png`
-
-The ingestion script downloads the dataset using `zenodo_get`, extracts the archive, and uploads all PNG files to the raw container using the Azure Blob Storage SDK.
-
-### ETL Process
-
-- **Script:** `src/etl/preprocess.py`
-- **Notebook:** `notebooks/ETL.ipynb`
-- **Steps:**
-  1. Read images from raw container
-  2. Validate each image (size check, blank detection, NaN check)
-  3. Normalize pixel values to 0–1 range
-  4. Upload cleaned images to processed container (`clean/` prefix)
-  5. Generate validation report CSV
-
-Invalid images are logged and skipped. All transformations are reproducible and parameterized.
-
-### Cataloging and Governance
-
-- **Catalog:** `azure/catalog.json`
-- **Schema:** Grayscale PNG, 224×224, uint8 pixel values
-- **Zones:** `raw/` (original), `processed/clean/` (validated and normalized)
-- **Labels:** X (strongest), M (moderate), C (weak), B (very weak), N (no flare)
-- **Lineage:** Zenodo → raw container → ETL → processed container → feature store
-
-### Exploratory Analysis
-
-- **Notebook:** `notebooks/EDA.ipynb`
-- **Covers:**
-  - Class distribution (multi-class and binary)
-  - Pixel intensity distributions by flare class
-  - Mean and standard deviation analysis per class
-  - Sample image visualization grid
-  - Outlier detection via blank image flagging
-
-### Feature Extraction
-
-- **Script:** `src/features/feature_extraction.py`
-- **Features extracted per image:**
-  - **Statistical:** mean, std, min, max, skewness, kurtosis, IQR, percentiles
-  - **Gradient:** mean/std/max of pixel gradient magnitude (edge strength)
-  - **Spatial:** center of mass (x, y), active region pixel ratio
-- **Output:** `outputs/features.csv`
-- **Justification:** Magnetic field intensity statistics capture flare-relevant patterns; gradient features detect sharp magnetic polarity boundaries associated with flare activity; spatial features capture active region geometry.
-
----
-
 ## Phase 2: Model Development, Validation & Deployment
 
 ### Phase 2 Objectives
@@ -126,6 +37,7 @@ Phase 2 focuses on model development, validation, and deployment within an AI sy
 3. **Model Versioning and Registration** — Version trained models and register them in Azure ML with metadata including training data version, feature set, metrics, and limitations.
 4. **Deployment** — Deploy the selected model using batch serving mode with clear input/output interfaces and documented deployment configuration.
 5. **Deployment Validation** — Verify deployed model behavior through functional tests, confirming consistency between offline training and deployed predictions.
+
 
 ### Azure Infrastructure (Phase 2)
 
