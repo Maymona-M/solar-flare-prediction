@@ -10,7 +10,7 @@ steps:
 - task: AzureCLI@2
   displayName: 'Run Solar Flare Batch Inference'
   inputs:
-    azureSubscription: 'azure-ml-connection'
+    azureSubscription: 'SC-UDST-CCIT-DSAI3202-2'
     scriptType: bash
     scriptLocation: inlineScript
     inlineScript: |
