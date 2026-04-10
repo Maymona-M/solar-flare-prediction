@@ -1,4 +1,4 @@
-# Solar Flare Prediction
+# Solar Flare Prediction — Phase 2
 
 **Course:** DSAI 3202 — Data Pipeline, ETL, and Feature Foundations  
 **Institution:** University of Doha for Science and Technology
@@ -53,79 +53,27 @@ Phase 2 focuses on model development, validation, and deployment within an AI sy
 | Batch Endpoint | `solar-flare-batch-endpoint` | Real-time inference endpoint |
 
 
+---
+
 ## Repository Structure
-```
 solar-flare-prediction/
-├── README.md                      # Complete project documentation
-├── environment.yml                # Conda environment (Python 3.9)
-├── requirements.txt               # Python dependencies
-├── .gitignore                     # Git ignore rules
-│
-├── src/                           # Source code
-│   ├── train.py                   # Logistic Regression training script
-│   ├── train_cnn.py               # CNN training script (MobileNetV2)
-│   ├── score.py                   # Batch endpoint scoring script
-│   ├── ingestion/                 # Data ingestion scripts
-│   │   ├── download_dataset.py    # Download from Zenodo
-│   │   └── __init__.py
-│   ├── etl/                       # ETL pipeline scripts
-│   │   ├── preprocess.py          # Image validation & normalization
-│   │   └── __init__.py
-│   ├── features/                  # Feature extraction scripts
-│   │   └── __init__.py
-│   └── catalog/                   # Data catalog
-│       ├── catalog.py
-│       └── __init__.py
-│
-├── notebooks/                     # Jupyter notebooks
-│   ├── EDA.ipynb                  # Exploratory Data Analysis
-│   ├── ETL.ipynb                  # ETL pipeline notebook
-│   └── .ipynb_aml_checkpoints/    # Auto-saved checkpoints
-│
-├── pipelines/                     # Azure ML pipeline YAMLs
-│   ├── training_pipeline.yml      # Main training job definition
-│   ├── labeled_dataset.yml        # Dataset registration
-│   ├── cnn_training_pipeline.yml  # CNN training job
-│   └── backup/                    # Archived test pipelines
-│
-├── azure/                         # Azure ML configuration
-│   ├── aml_environment.yml        # Environment definition (v2)
-│   ├── batch_endpoint.yml         # Batch endpoint config
-│   ├── batch_deployment.yml       # Deployment config
-│   ├── model_registration.yml     # Model registration template
-│   ├── catalog.json               # Data catalog metadata
-│   └── score.py                   # Scoring script copy
-│
-├── data/                          # Data files (not in Git)
-│   ├── raw/                       # Original magnetogram images
-│   │   └── Lat60_Lon60_Nans0_png_224/
-│   │       ├── 1065/              # Active Region 1065 images
-│   │       ├── 1072/              # Active Region 1072 images
-│   │       └── ...                # 1570 AR folders
-│   ├── dryad/                     # Dryad label files
-│   │   ├── C1.0_24hr_224_png_Labels.txt
-│   │   ├── Train_Data_by_AR_png_224.csv
-│   │   ├── Test_Data_by_AR_png_224.csv
-│   │   ├── Validation_Data_by_AR_png_224.csv
-│   │   └── Lat60_Lon60_Nans0_C1.0_24hr_png_224_features.csv
-│   ├── features_labeled.csv       # Final labeled dataset (551 MB)
-│   └── sample_5000_balanced.csv   # Balanced sample for testing
-│
-├── outputs/                       # Model outputs (not in Git)
-│   ├── cnn/                       # CNN model artifacts
-│   │   ├── cnn_best.keras         # Best model (25 MB)
-│   │   └── cnn_model.keras        # Final model (25 MB)
-│   ├── backup/                    # Archived outputs
-│   │   └── features_phase1_unlabeled.csv
-│   ├── features_with_metadata.csv # Phase 1 features with metadata
-│   ├── features_with_target.csv   # Phase 1 features (unlabeled)
-│   └── validation_report.csv      # ETL validation report
-│
-├── test_images/                   # Test images for deployment
-│   └── 1072_hmi.M_720s.*.png      # Sample images from AR 1072
-│
-└── check_data.py                  # Quick data validation script
-```
+├── src/                    # Training scripts, CNN model
+├── src_v2/                 # Inference scripts
+│   └── batch_inference.py  # Main inference entry point
+├── azure/                  # Azure ML configuration
+│   ├── batch_endpoint.yml
+│   ├── batch_deployment.yml
+│   ├── inference_job.yml
+│   └── aml_environment.yml
+├── .azure-pipelines/
+│   └── solar-flare-pipeline.yml  # DevOps CI pipeline
+├── outputs/
+│   ├── baseline/           # Trained model artifacts (model.pkl, scaler.pkl)
+│   └── predictions.csv     # Latest inference output
+└── README.md
+
+---
+
 
 ### Phase 2 Implementation
 
@@ -144,29 +92,31 @@ The Phase 1 features were merged with official Dryad labels to create a properly
 - Flare positive (≥C1.0): 878,485 images (92.5%)
 - Flare negative: 71,562 images (7.5%)
 
-#### Model Development
+---
 
-Two models were developed to test the hypothesis:
+## Model Development
 
-**Baseline Model: Logistic Regression**
-- Trained on extracted features (31 statistical, gradient, and spatial features)
-- Reproducible with random seed 42 and stratified 80/20 split
-- Serves as performance baseline for comparison
+### Baseline Model
+- **Algorithm:** Logistic Regression (scikit-learn)
+- **Justification:** Chosen as an interpretable, fast-training baseline suitable for binary classification with tabular features. Provides a performance floor for comparison against more complex models.
+- **Features:** 30 CNN-derived image features (`feature_0` to `feature_29`) extracted from solar magnetogram images
+- **Target:** Binary — flare (1) vs no-flare (0)
+- **Random seed:** Fixed for reproducibility
+- **Data split:** Train/validation/test with stratification on target label
 
-**Full-Feature Model: CNN (MobileNetV2)**
-- Architecture: MobileNetV2 backbone pretrained on ImageNet
-- Fine-tuning: Last 30 layers unfrozen for domain adaptation
-- Input: 224×224 RGB magnetogram images
-- Output: Binary classification (flare vs no-flare)
-- Training: 10 epochs with early stopping (patience=3)
-- Class weights: Balanced to handle class imbalance
+### CNN Model
+- A Convolutional Neural Network was also developed for direct image-based classification
+- Architecture defined in `src/cnn_model.py`
+- Trained using PyTorch with fixed random seeds
 
-#### Model Validation
+---
 
-**Validation Strategy:**
-- Stratified 80/20 train/test split (maintaining class distribution)
-- Random seed fixed at 42 for reproducibility
-- Evaluation metrics: Accuracy, F1-Score, ROC-AUC, Confusion Matrix
+## Model Validation
+
+### Strategy
+- Stratified train/validation/test split to preserve class balance
+- Evaluation on held-out test set only — no data leakage
+- Metrics chosen to reflect realistic class imbalance in solar flare data
 
 **CNN Model Results (Test Set):**
 
@@ -193,68 +143,87 @@ Two models were developed to test the hypothesis:
 
 ---
 
-### Model Versioning and Registration
+## Model Versioning and Registration
 
-The CNN model is registered in Azure ML with comprehensive metadata:
+All artifacts are registered in Azure ML:
 
-```yaml
-name: solar-flare-cnn
-version: 1
-description: CNN model for solar flare prediction (MobileNetV2, AUC=0.9999)
-properties:
-  model_type: "CNN_MobileNetV2"
-  framework: "TensorFlow"
-  val_auc: "0.9999"
-  val_accuracy: "0.94"
-  img_size: "224x224"
-tags:
-  project: "solar-flare-prediction"
-  phase: "2"
-```
+| Asset | Name | Version |
+|---|---|---|
+| Model | `solar-flare-model` | 1 |
+| Environment | `solar-flare-env` | 3 |
+| Data (features) | `solar-flare-features-labeled` | 1 |
+| Data (with target) | `solar-flare-features-target` | 1 |
+| Data (with metadata) | `solar-flare-features-metadata` | 1 |
 
-Registration Command:
+- **Workspace:** `Amazon-Electronics-Lab-60305750`
+- **Resource Group:** `rg-60305750`
+- **Subscription:** `0b475409-9d7c-4dff-a07b-084eff651874`
 
-```bash
-az ml model create --name solar-flare-cnn --version 1 --path outputs/cnn/cnn_best.keras --type custom_model
-```
+---
 
 ## Deployment
 
-The model is deployed as a **batch endpoint** on Azure Machine Learning.
+### Serving Mode
+Batch inference using Azure ML CommandJob — appropriate for periodic solar flare prediction over datasets of observations.
 
-### Endpoint Configuration
+### Endpoint
+- **Batch Endpoint:** `solar-flare-endpoint-60305750`
+- **Scoring URI:** `https://solar-flare-endpoint-60305750.qatarcentral.inference.ml.azure.com/jobs`
+- **Deployment:** `solar-flare-deploy-60305750`
+- **Compute:** `cpu-cluster` (Standard_DS3_v2)
 
-```yaml
-name: solar-flare-batch-endpoint
-auth_mode: aad_token
-```
+### Input/Output Interface
+- **Input:** CSV file with columns `feature_0` to `feature_29`
+- **Output:** `predictions.csv` with columns: `filename`, `prediction` (0/1), `probability` (float), `timestamp`
 
-### Deployment Configuration:
+### Feature Parity
+Training and serving use identical feature columns (`feature_0` to `feature_29`) with the same `StandardScaler` fitted during training and saved as `scaler.pkl`.
 
-```yaml
-name: solar-flare-cnn-deployment
-model: azureml:solar-flare-cnn:1
-scoring_script: score.py
-environment: azureml:solar-flare-env:2
-compute: azureml:solar-flare-cluster
-```
+### Inference Script
+- `src_v2/batch_inference.py` — loads model and scaler from AML Model Registry, downloads input data from registered datastore, runs inference, saves predictions
 
-## Scoring Script Features:
-init(): Loads model from registered path
-run(mini_batch): Processes batch of images, returns predictions
-Input: List of PNG image file paths
-Output: DataFrame with filename, prediction, confidence
+---
 
 ## Deployment Validation
-The deployed endpoint was tested with 268 images from Active Region 1072:
 
-Test Metric	Result
-|----------------|--------------------|
-|Input Images |	268 |
-|Successful Predictions |	268 |
-|Processing Time |	< 30 seconds |
-|Output Format |	CSV with filename, prediction, confidence |
+### Functional Test
+- Inference job `dreamy_king_6f2985n2fr` ran successfully on `features_labeled.csv`
+- Status: **Completed** ✅
+- Output: `predictions.csv` generated with prediction and probability per row
+- Verified via: `az ml job show --name dreamy_king_6f2985n2fr --query status`
 
+### Sanity Checks
+- Model loads without errors from registered artifact
+- Scaler transforms 30 features correctly
+- Predictions are binary (0/1) with probabilities in [0,1]
+- No data leakage — scaler fitted on training data only
+
+---
+
+## DevOps Automation
+
+### Pipeline
+- **File:** `.azure-pipelines/solar-flare-pipeline.yml`
+- **Trigger:** Push to `phase2` branch
+- **Service Connection:** `SC-UDST-CCIT-DSAI3202-2`
+- **Latest successful run:** `#20260409.17` ✅
+
+### What it does
+On every push to `phase2`, the pipeline:
+1. Authenticates to Azure using the service principal
+2. Installs the Azure ML CLI extension
+3. Submits `azure/inference_job.yml` as a CommandJob to AML
+4. Streams logs and reports success/failure
+
+---
+
+## Rollback Plan
+
+To revert to a previous model version:
+1. Register the previous model: `az ml model create --name solar-flare-model --version <N> --path outputs/baseline/`
+2. Update `azure/batch_deployment.yml` to point to the previous version: `model: azureml:solar-flare-model:<N>`
+3. Redeploy: `az ml batch-deployment create --file azure/batch_deployment.yml --set-default`
+4. Verify with a test invocation before routing production traffic
 
 ---
 
@@ -268,6 +237,18 @@ Test Metric	Result
 | Processed Container | processed |
 | Curated Container | curated |
 | AML Workspace | solar-flare-aml-60306027 |
+
+---
+
+## How to Run Inference Manually
+
+```bash
+az ml job create \
+  --file azure/inference_job.yml \
+  --resource-group rg-60305750 \
+  --workspace-name Amazon-Electronics-Lab-60305750 \
+  --stream
+```
 
 ---
 
