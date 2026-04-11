@@ -141,9 +141,9 @@ All artifacts are registered in Azure ML:
 | Data (with target) | `solar-flare-features-target` | 1 |
 | Data (with metadata) | `solar-flare-features-metadata` | 1 |
 
-- **Workspace:** `Amazon-Electronics-Lab-60305750`
-- **Resource Group:** `rg-60305750`
-- **Subscription:** `0b475409-9d7c-4dff-a07b-084eff651874`
+- **Workspace:** `solar-flare-aml-60306027`
+- **Resource Group:** `rg-60306027`
+- **Subscription:** `UDST-CCIT-DSAI3202-2`
 
 ---
 
