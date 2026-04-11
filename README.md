@@ -1,6 +1,6 @@
 # Solar Flare Prediction — Phase 2
 
-**Course:** DSAI 3202 — Data Pipeline, ETL, and Feature Foundations  
+**Course:** DSAI 3202 — Model Development, Validation & Deployment 
 **Institution:** University of Doha for Science and Technology
 
 ---
@@ -9,8 +9,8 @@
 
 | Name | Student ID | Role |
 |---|---|---|
-| Maymona Mustafa | 60306027 | Data Ingestion, Data Cataloging |
-| Asma Riyaz | 60305750 | ETL Pipeline, Exploratory Analysis, Feature Extraction |
+| Maymona Mustafa | 60306027 | Model Development, Versioning & Deployment |
+| Asma Riyaz | 60305750 | Model Development, Valiation & Deployment |
 
 ---
 
@@ -38,24 +38,10 @@ Phase 2 focuses on model development, validation, and deployment within an AI sy
 4. **Deployment** — Deploy the selected model using batch serving mode with clear input/output interfaces and documented deployment configuration.
 5. **Deployment Validation** — Verify deployed model behavior through functional tests, confirming consistency between offline training and deployed predictions.
 
-
-### Azure Infrastructure (Phase 2)
-
-| Resource | Name | Description |
-|----------|------|-------------|
-| Resource Group | `rg-60306027` | Container for all Azure resources |
-| Storage Account | `solarflarestorageproject` | Raw, processed, and curated image storage |
-| AML Workspace | `solar-flare-aml-60306027` | Central ML resource management |
-| Compute Cluster | `solar-flare-cluster` | Standard_DS3_v2, 0-2 nodes, auto-scale |
-| Environment | `solar-flare-env:2` | PyTorch 2.0.1, TensorFlow, scikit-learn, pandas, azureml-core |
-| Labeled Dataset | `solar-flare-labeled:1` | Versioned dataset with 950,047 labeled samples |
-| CNN Model | `solar-flare-cnn:1` | MobileNetV2-based model (26 MB) |
-| Batch Endpoint | `solar-flare-batch-endpoint` | Real-time inference endpoint |
-
-
 ---
 
 ## Repository Structure
+``` bash
 solar-flare-prediction/
 ├── src/                    # Training scripts, CNN model
 ├── src_v2/                 # Inference scripts
@@ -71,7 +57,7 @@ solar-flare-prediction/
 │   ├── baseline/           # Trained model artifacts (model.pkl, scaler.pkl)
 │   └── predictions.csv     # Latest inference output
 └── README.md
-
+```
 ---
 
 
@@ -188,7 +174,7 @@ Training and serving use identical feature columns (`feature_0` to `feature_29`)
 
 ### Functional Test
 - Inference job `dreamy_king_6f2985n2fr` ran successfully on `features_labeled.csv`
-- Status: **Completed** ✅
+- Status: **Completed**
 - Output: `predictions.csv` generated with prediction and probability per row
 - Verified via: `az ml job show --name dreamy_king_6f2985n2fr --query status`
 
@@ -206,7 +192,7 @@ Training and serving use identical feature columns (`feature_0` to `feature_29`)
 - **File:** `.azure-pipelines/solar-flare-pipeline.yml`
 - **Trigger:** Push to `phase2` branch
 - **Service Connection:** `SC-UDST-CCIT-DSAI3202-2`
-- **Latest successful run:** `#20260409.17` ✅
+- **Latest successful run:** `#20260409.17`
 
 ### What it does
 On every push to `phase2`, the pipeline:
@@ -227,16 +213,18 @@ To revert to a previous model version:
 
 ---
 
-## Azure Infrastructure
+### Azure Infrastructure (Phase 2)
 
-| Resource | Name |
-|---|---|
-| Resource Group | rg-60306027 |
-| Storage Account | solarflarestorageproject |
-| Raw Container | raw |
-| Processed Container | processed |
-| Curated Container | curated |
-| AML Workspace | solar-flare-aml-60306027 |
+| Resource | Name | Description |
+|----------|------|-------------|
+| Resource Group | `rg-60306027` | Container for all Azure resources |
+| Storage Account | `solarflarestorageproject` | Raw, processed, and curated image storage |
+| AML Workspace | `solar-flare-aml-60306027` | Central ML resource management |
+| Compute Cluster | `solar-flare-cluster` | Standard_DS3_v2, 0-2 nodes, auto-scale |
+| Environment | `solar-flare-env:2` | PyTorch 2.0.1, TensorFlow, scikit-learn, pandas, azureml-core |
+| Labeled Dataset | `solar-flare-labeled:1` | Versioned dataset with 950,047 labeled samples |
+| CNN Model | `solar-flare-cnn:1` | MobileNetV2-based model (26 MB) |
+| Batch Endpoint | `solar-flare-batch-endpoint` | Real-time inference endpoint |
 
 ---
 
