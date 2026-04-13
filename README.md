@@ -108,7 +108,7 @@ The Phase 1 features were merged with official Dryad labels to create a properly
 
 | Metric | Log-Reg Value | CNN Value |
 |--------|-------|
-| ROC-AUC | **0.749** | **0.9999** |
+| ROC-AUC | **0.749** | **0.829** |
 | Accuracy | - | **94%** |
 | Precision (Flare) | - | 1.00 |
 | Recall (Flare) | - | 0.93 |
