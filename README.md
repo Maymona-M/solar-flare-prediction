@@ -104,15 +104,15 @@ The Phase 1 features were merged with official Dryad labels to create a properly
 - Evaluation on held-out test set only — no data leakage
 - Metrics chosen to reflect realistic class imbalance in solar flare data
 
-**CNN Model Results (Test Set):**
+**Model Results (Test Set):**
 
-| Metric | Value |
+| Metric | Log-Reg Value | CNN Value |
 |--------|-------|
-| ROC-AUC | **0.9999** |
-| Accuracy | **94%** |
-| Precision (Flare) | 1.00 |
-| Recall (Flare) | 0.93 |
-| F1-Score (Flare) | 0.97 |
+| ROC-AUC | **0.749** | **0.9999** |
+| Accuracy | - | **94%** |
+| Precision (Flare) | - | 1.00 |
+| Recall (Flare) | - | 0.93 |
+| F1-Score (Flare) | - | 0.97 |
 
 **Confusion Matrix:**
 
